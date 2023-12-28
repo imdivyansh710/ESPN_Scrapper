@@ -33,7 +33,7 @@ function getMatchDetails(html) {
     console.log(matchResEle.text());
 
     let teamNames = selTool('.ds-text-tight-l');
-   console.log(teamNames.text());
+   //console.log(teamNames.text());
     let team1 = selTool(teamNames[0]).text();
     let team2 = selTool(teamNames[1]).text();
     console.log(team1);
