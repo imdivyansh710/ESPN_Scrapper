@@ -1,5 +1,8 @@
 const request = require('request');
 const cheerio = require('cheerio');
+const path = require('path');
+const fs = require('fs');
+const xlsx = require('xlsx');
 
 function getInfoFromScoreCard(url) {
     //console.log("from scorecard.js", url);
@@ -31,6 +34,7 @@ function getMatchDetails(html) {
     //4 get result
     let matchResEle = selTool('.ds-text-tight-m.ds-font-regular.ds-truncate.ds-text-typo');
     console.log(matchResEle.text());
+    let matchResult = matchResEle.text();
 
     let teamNames = selTool('.ds-text-tight-l');
    //console.log(teamNames.text());
@@ -57,21 +61,67 @@ function getMatchDetails(html) {
             //cconsole.log("forstcolumn",selTool(firstColumnOfRow).html());
            // console.log(selTool(selTool(firstColumnOfRow).html()).hasClass("ds-popper-wrapper"));
              if(selTool(selTool(firstColumnOfRow).html()).hasClass("ds-popper-wrapper")==true){
-                let playerName = selTool(row.find('td')[0]).text();
+                let playerName = selTool(row.find('td')[0]).text().trim();
                 let run = selTool(row.find('td')[2]).text();
                 let ball = selTool(row.find('td')[3]).text();
                 let six = selTool(row.find('td')[6]).text();
                 let four = selTool(row.find('td')[5]).text();
                 let strikeRate = selTool(row.find('td')[7]).text();
                 console.log(`Player name ${playerName} run ${run} ball ${ball} four ${four} six ${six} strike rate ${strikeRate} `);
-
-            //     console.log(playerName);
-             }
+                // console.log(playerName);
+                processInformation(dateOfMatch,venueOfMatch,matchResult,team1,team2,playerName,run,ball,six,four,strikeRate);
+            
+            }
         }
     }
 
    // console.log(stringhtml);
    
+}
+
+function processInformation(dateOfMatch,venueOfMatch,matchResult,team1,team2,playerName,runs,balls,numberOf4,numberOf6,sr){
+    let teamNamePath = path.join(__dirname,"IPL",team1);
+     if(!fs.existsSync(teamNamePath)){
+         fs.mkdirSync(teamNamePath);
+     } 
+
+     let playerPath = path.join(teamNamePath,playerName+".xlsx");
+     let content = excelReader(playerPath,playerName);
+
+     let playerObj={
+        dateOfMatch,
+        venueOfMatch,
+        matchResult,
+        team1,
+        team2,
+        playerName,
+        runs,
+        balls,
+        numberOf4,
+        numberOf6,
+        sr
+     };
+
+     content.push(playerObj);
+     excelWriter(playerPath,content,playerName);
+}
+
+function excelReader(playerPath,sheetName){
+    if(!fs.existsSync(playerPath)){
+        return [];
+    }
+
+    let workbook = xlsx.readFile(playerPath);
+    let excelData = workbook.Sheets[sheetName];
+    let playerObj =  xlsx.utils.sheet_to_json(excelData);
+    return playerObj;
+}
+
+function excelWriter(playerPath,jsObject,sheetName){
+    let newWorkBook = xlsx.utils.book_new();
+    let newWorkSheet = xlsx.utils.json_to_sheet(jsObject);
+    xlsx.utils.book_append_sheet(newWorkBook,newWorkSheet,sheetName);
+    xlsx.writeFile(newWorkBook,playerPath);
 }
 
 module.exports = {
