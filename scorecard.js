@@ -38,10 +38,10 @@ function getMatchDetails(html) {
 
     let teamNames = selTool('.ds-text-tight-l');
    //console.log(teamNames.text());
-    let team1 = selTool(teamNames[0]).text();
-    let team2 = selTool(teamNames[1]).text();
-    console.log(team1);
-    console.log(team2);
+    let ownTeam = selTool(teamNames[0]).text();
+    let opponentTeam = selTool(teamNames[1]).text();
+    console.log(ownTeam);
+    console.log(opponentTeam);
 
     //5 get innings 
 
@@ -53,6 +53,11 @@ function getMatchDetails(html) {
     {
         stringhtml+= selTool(allBatsmanTable[i]).html();
         let allRows = selTool(allBatsmanTable[i]).find("tr");
+        if (i == 1) {
+            let temp = ownTeam;
+            ownTeam = opponentTeam;
+            opponentTeam = temp;
+          }
         console.log(allRows.length);
         for(let j=0;j<allRows.length;j++)
         {
@@ -61,7 +66,15 @@ function getMatchDetails(html) {
             //cconsole.log("forstcolumn",selTool(firstColumnOfRow).html());
            // console.log(selTool(selTool(firstColumnOfRow).html()).hasClass("ds-popper-wrapper"));
              if(selTool(selTool(firstColumnOfRow).html()).hasClass("ds-popper-wrapper")==true){
-                let playerName = selTool(row.find('td')[0]).text().trim();
+                let pn = selTool(row.find('td')[0]).text().split("");
+                let playerName="";
+                if (pn.includes("(")) {
+                    playerName = pn.join("").split("(")[0];
+                    // console.log(playerName);
+                  } else if (pn.includes("†")) {
+                    playerName = pn.join("").split("†")[0];
+                    // console.log(playerName);
+                  } else playerName = pn.join(""); 
                 let run = selTool(row.find('td')[2]).text();
                 let ball = selTool(row.find('td')[3]).text();
                 let six = selTool(row.find('td')[6]).text();
@@ -69,7 +82,7 @@ function getMatchDetails(html) {
                 let strikeRate = selTool(row.find('td')[7]).text();
                 console.log(`Player name ${playerName} run ${run} ball ${ball} four ${four} six ${six} strike rate ${strikeRate} `);
                 // console.log(playerName);
-                processInformation(dateOfMatch,venueOfMatch,matchResult,team1,team2,playerName,run,ball,six,four,strikeRate);
+                processInformation(dateOfMatch,venueOfMatch,matchResult,ownTeam,opponentTeam,playerName,run,ball,six,four,strikeRate);
             
             }
         }
@@ -79,8 +92,8 @@ function getMatchDetails(html) {
    
 }
 
-function processInformation(dateOfMatch,venueOfMatch,matchResult,team1,team2,playerName,runs,balls,numberOf4,numberOf6,sr){
-    let teamNamePath = path.join(__dirname,"IPL",team1);
+function processInformation(dateOfMatch,venueOfMatch,matchResult,ownTeam,opponentTeam,playerName,runs,balls,numberOf4,numberOf6,sr){
+    let teamNamePath = path.join(__dirname,"IPL",ownTeam);
      if(!fs.existsSync(teamNamePath)){
          fs.mkdirSync(teamNamePath);
      } 
@@ -92,8 +105,8 @@ function processInformation(dateOfMatch,venueOfMatch,matchResult,team1,team2,pla
         dateOfMatch,
         venueOfMatch,
         matchResult,
-        team1,
-        team2,
+        ownTeam,
+        opponentTeam,
         playerName,
         runs,
         balls,
